@@ -35,6 +35,17 @@ def load_records(gvcf_file):
     print(f"loaded records: {records.shape}")
     print(records.head())
 
+    # parse FORMAT column assuming constant order [GT:AD:DP:GQ]
+    sample_col = "l1m7WayG"   # TO UPDATE: in future use SampleID
+
+    # parts[0]=GT, parts[1]=AD, parts[2]=DP, parts[3]=GQ
+    parts = records[sample_col].str.split(":", expand=True)
+
+    records["GT"] = parts[0]
+    records["DP"] = parts[2].astype("int64")
+    records["GQ"] = parts[3].astype("int64")
+    print(records.head())
+
     return records
 
 
