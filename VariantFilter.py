@@ -12,7 +12,7 @@ def load_meta(meta_file):
     return samples
 
 
-def load_records(gvcf_file):
+def load_records(gvcf_file, sample_id):
     """
     load variant records
     possible memory issue if datasets ++size
@@ -44,10 +44,8 @@ def load_records(gvcf_file):
     print(records.head())
 
     # parse FORMAT column assuming constant order [GT:AD:DP:GQ]
-    sample_col = "l1m7WayG"   # TO UPDATE: in future use SampleID
-
     # parts[0]=GT, parts[1]=AD, parts[2]=DP, parts[3]=GQ
-    parts = records[sample_col].str.split(":", expand=True)
+    parts = records[sample_id].str.split(":", expand=True)
 
     records["GT"] = parts[0]
     records["DP"] = parts[2].astype("int64")
@@ -80,11 +78,19 @@ if __name__ == "__main__":
     wd = "/Users/rnadeau2/Documents/Technical_test/Cohort_A/"
     meta_file = wd + "metadata.tsv"
     gvcf_file = wd + "l1m7WayG.gvcf.gz"
-    
-    sampleID = "l1m7WayG"
-    het_counts = {}
 
+    het_counts = {} # initialize count dict
+
+    # load meta data
     samples = load_meta(meta_file)
-    records = load_records(gvcf_file)
-    het_counts[sampleID] = count_variants(records)
-    het_counts[sampleID] = count_variants(records)
+
+    for sample_id in samples["SampleID"]:
+        gvcf_path = f"{wd}{sample_id}.gvcf.gz"
+        if 1 == 1:#gvcf_path.exists():
+            # load records table & extract {GT, DP and GQ}
+            records = load_records(gvcf_path, sample_id)
+            # filter records & count heterogeneous variants
+            het_counts[sample_id] = count_variants(records)
+
+            print(het_counts[sample_id])
+
