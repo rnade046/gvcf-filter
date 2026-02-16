@@ -1,16 +1,24 @@
 import pandas as pd
 import gzip
 
-# load meta data as dataframe
 def load_meta(meta_file):
-   samples = pd.read_csv(meta_file, sep="\t", dtype={"SampleID": "string", "Ancestry": "string"})
-   # samples = samples.set_index("SampleID") # if need index of rows
-   return samples
+    """
+    load meta data as dataframe
+    :param meta_file:
+    :return: sample (data frame)
+    """
+    samples = pd.read_csv(meta_file, sep="\t", dtype={"SampleID": "string", "Ancestry": "string"})
+    # samples = samples.set_index("SampleID") # if need index of rows
+    return samples
 
 
-# load variant records
-# possible memory issue if datasets ++size
 def load_records(gvcf_file):
+    """
+    load variant records
+    possible memory issue if datasets ++size
+    :param gvcf_file:
+    :return: records (data frame)
+    """
     # find the line number where the column header starts (#CHROM)
     header_line_idx = None
     with gzip.open(gvcf_file, "rt", encoding="utf-8", errors="replace") as f:
@@ -49,10 +57,34 @@ def load_records(gvcf_file):
     return records
 
 
+def count_variants(records):
+    """
+    Filter records data frame and count variants
+    :param records: data frame
+    :return count: int
+    """
+    # set filter for GT, DP, GQ columns
+    filter = (
+            records["GT"].isin(["0/1", "1/0", "0|1", "1|0"]) # heterogeneous phased or un-phased
+            & (records["DP"] > 20)
+            & (records["GQ"] >= 30)
+    )
+
+    # filter data frame
+    passing_records = records[filter]
+    # #rows in filtered df corresponds to #variants
+    return len(passing_records)
+
+
 if __name__ == "__main__":
     wd = "/Users/rnadeau2/Documents/Technical_test/Cohort_A/"
     meta_file = wd + "metadata.tsv"
     gvcf_file = wd + "l1m7WayG.gvcf.gz"
+    
+    sampleID = "l1m7WayG"
+    het_counts = {}
 
     samples = load_meta(meta_file)
     records = load_records(gvcf_file)
+    het_counts[sampleID] = count_variants(records)
+    het_counts[sampleID] = count_variants(records)
