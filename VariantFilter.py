@@ -1,6 +1,7 @@
 import pandas as pd
 from pathlib import Path
 import gzip
+import viz
 
 
 def load_meta(meta_file):
@@ -83,6 +84,7 @@ def create_output_file(samples, het_counts, cohort_name, out_file):
     :param het_counts: cohort heterogeneous counts per sample (dict)
     :param cohort_name: eg. 'Cohort_A' (String)
     :param out_file: .parquet (Path)
+    :return combined_df: summary dataframe
     """
     # convert het_count dictionary to dataframe
     het_counts_df = pd.DataFrame(het_counts.items(), columns=["SampleID", "Het_Count"])
@@ -94,7 +96,7 @@ def create_output_file(samples, het_counts, cohort_name, out_file):
     # combine and write dataframe
     combined_df = pd.merge(samples, het_counts_df, on="SampleID")
     combined_df.to_parquet(out_file, index=False)
-
+    return combined_df
 
 if __name__ == "__main__":
 
@@ -110,6 +112,7 @@ if __name__ == "__main__":
         out_dir = cohort_dir / "outputs"
         out_dir.mkdir(exist_ok=True)  # create output directory
         output_path = out_dir / f"{cohort_name}_output.parquet"
+        viz_path = out_dir / f"{cohort_name}_boxplots.pdf"
 
         het_counts = {}  # initialize count dict
 
@@ -127,4 +130,6 @@ if __name__ == "__main__":
 
                 print(het_counts[sample_id])
 
-        create_output_file(samples, het_counts, cohort_name, output_path)
+        # generate outputs .parquet file & summary visualizations
+        samples2 = create_output_file(samples, het_counts, cohort_name, output_path)
+        viz.plot_het_count_age(samples2, cohort_name, viz_path)
