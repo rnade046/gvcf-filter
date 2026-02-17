@@ -76,8 +76,22 @@ def count_variants(records):
     return len(passing_records)
 
 
-def create_output_file(samples, het_counts, out_file):
+def create_output_file(samples, het_counts, cohort_name, out_file):
+    """
+    Writes the samples meta-data, cohort, and het_counts to parquet file
+    :param samples: meta-data table (dataframe)
+    :param het_counts: cohort heterogeneous counts per sample (dict)
+    :param cohort_name: eg. 'Cohort_A' (String)
+    :param out_file: .parquet (Path)
+    """
+    # convert het_count dictionary to dataframe
     het_counts_df = pd.DataFrame(het_counts.items(), columns=["SampleID", "Het_Count"])
+
+    # add cohort information
+    cohort = cohort_name.split("_", 1)[1]
+    samples["Cohort"] = cohort
+
+    # combine and write dataframe
     combined_df = pd.merge(samples, het_counts_df, on="SampleID")
     combined_df.to_parquet(out_file, index=False)
 
@@ -113,4 +127,4 @@ if __name__ == "__main__":
 
                 print(het_counts[sample_id])
 
-        create_output_file(samples, het_counts, output_path)
+        create_output_file(samples, het_counts, cohort_name, output_path)
