@@ -1,4 +1,5 @@
 import pandas as pd
+import pyarrow.parquet as pq
 import gzip
 
 def load_meta(meta_file):
@@ -74,6 +75,12 @@ def count_variants(records):
     return len(passing_records)
 
 
+def create_output_file(samples, het_counts, out_file):
+    het_counts_df = pd.DataFrame(het_counts.items(),  columns = ["SampleID", "Het_Count"])
+    combined_df = pd.merge(samples, het_counts_df, on="SampleID")
+    combined_df.to_parquet(out_file, index=False)
+
+
 if __name__ == "__main__":
     wd = "/Users/rnadeau2/Documents/Technical_test/Cohort_A/"
     meta_file = wd + "metadata.tsv"
@@ -94,3 +101,4 @@ if __name__ == "__main__":
 
             print(het_counts[sample_id])
 
+    create_output_file(samples, het_counts, f"{wd}cohortA.parquet")
