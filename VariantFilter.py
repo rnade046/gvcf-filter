@@ -1,13 +1,24 @@
 import pandas as pd
 from pathlib import Path
 import gzip
+import argparse
 import viz
 
+
+def parse_arguments():
+    """
+    Parse arguments to obtain working directory
+    :return p.parse_args(): arguments
+    """
+    p = argparse.ArgumentParser()
+    p.add_argument("--wd", type=Path, required=True,
+        help="Working directory containing cohort folders (e.g., ~/technical_test/)")
+    return p.parse_args()
 
 def load_meta(meta_file):
     """
     load meta data as dataframe
-    :param meta_file:
+    :param meta_file: path
     :return: sample (data frame)
     """
     samples = pd.read_csv(meta_file, sep="\t", dtype={"SampleID": "string", "Ancestry": "string"})
@@ -19,8 +30,8 @@ def load_records(gvcf_file, sample_id):
     """
     load variant records
     possible memory issue if datasets ++size
-    :param gvcf_file:
-    :return: records (data frame)
+    :param gvcf_file: path
+    :return records: (data frame)
     """
     # find the line number where the column header starts (#CHROM)
     header_line_idx = None
@@ -100,8 +111,8 @@ def create_output_file(samples, het_counts, cohort_name, out_file):
 
 if __name__ == "__main__":
 
-    wd = Path("/Users/rnadeau2/Documents/Technical_test/")
-
+    # obtain working directory containing cohort directories as command line argument (--wd)
+    wd = parse_arguments().wd
     # obtain list of cohorts (must be directory and begin with "Cohort_")
     cohort_dirs = sorted(p for p in wd.iterdir() if p.is_dir() and p.name.startswith("Cohort_"))
 
