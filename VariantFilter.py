@@ -1,6 +1,7 @@
 import pandas as pd
-import pyarrow.parquet as pq
+from pathlib import Path
 import gzip
+
 
 def load_meta(meta_file):
     """
@@ -9,7 +10,7 @@ def load_meta(meta_file):
     :return: sample (data frame)
     """
     samples = pd.read_csv(meta_file, sep="\t", dtype={"SampleID": "string", "Ancestry": "string"})
-    # samples = samples.set_index("SampleID") # if need index of rows
+    # samples = samples.set_index("SampleID") # if row index is needed
     return samples
 
 
@@ -64,7 +65,7 @@ def count_variants(records):
     """
     # set filter for GT, DP, GQ columns
     filter = (
-            records["GT"].isin(["0/1", "1/0", "0|1", "1|0"]) # heterogeneous phased or un-phased
+            records["GT"].isin(["0/1", "1/0", "0|1", "1|0"])  # heterogeneous phased or un-phased
             & (records["DP"] > 20)
             & (records["GQ"] >= 30)
     )
@@ -76,29 +77,40 @@ def count_variants(records):
 
 
 def create_output_file(samples, het_counts, out_file):
-    het_counts_df = pd.DataFrame(het_counts.items(),  columns = ["SampleID", "Het_Count"])
+    het_counts_df = pd.DataFrame(het_counts.items(), columns=["SampleID", "Het_Count"])
     combined_df = pd.merge(samples, het_counts_df, on="SampleID")
     combined_df.to_parquet(out_file, index=False)
 
 
 if __name__ == "__main__":
-    wd = "/Users/rnadeau2/Documents/Technical_test/Cohort_A/"
-    meta_file = wd + "metadata.tsv"
-    gvcf_file = wd + "l1m7WayG.gvcf.gz"
 
-    het_counts = {} # initialize count dict
+    wd = Path("/Users/rnadeau2/Documents/Technical_test/")
 
-    # load meta data
-    samples = load_meta(meta_file)
+    # obtain list of cohorts (must be directory and begin with "Cohort_")
+    cohort_dirs = sorted(p for p in wd.iterdir() if p.is_dir() and p.name.startswith("Cohort_"))
 
-    for sample_id in samples["SampleID"]:
-        gvcf_path = f"{wd}{sample_id}.gvcf.gz"
-        if 1 == 1:#gvcf_path.exists():
-            # load records table & extract {GT, DP and GQ}
-            records = load_records(gvcf_path, sample_id)
-            # filter records & count heterogeneous variants
-            het_counts[sample_id] = count_variants(records)
+    # group by cohort
+    for cohort_dir in cohort_dirs:
+        cohort_name = cohort_dir.name
+        meta_path = cohort_dir / "metadata.tsv"
+        out_dir = cohort_dir / "outputs"
+        out_dir.mkdir(exist_ok=True)  # create output directory
+        output_path = out_dir / f"{cohort_name}_output.parquet"
 
-            print(het_counts[sample_id])
+        het_counts = {}  # initialize count dict
 
-    create_output_file(samples, het_counts, f"{wd}cohortA.parquet")
+        # load meta data
+        samples = load_meta(meta_path)
+
+        # group by sampleID
+        for sample_id in samples["SampleID"]:
+            gvcf_path = cohort_dir / f"{sample_id}.gvcf.gz"
+            if gvcf_path.exists():
+                # load records table & extract {GT, DP and GQ}
+                records = load_records(gvcf_path, sample_id)
+                # filter records & count heterogeneous variants
+                het_counts[sample_id] = count_variants(records)
+
+                print(het_counts[sample_id])
+
+        create_output_file(samples, het_counts, output_path)
