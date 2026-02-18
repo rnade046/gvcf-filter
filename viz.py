@@ -2,13 +2,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-def plot_het_count_age(samples: pd.DataFrame, cohort_name, output_path):
+def plot_het_count_age(samples: pd.DataFrame, cohort_name, output_path) -> None:
     """
     Generates boxplots for Age and Het_count from a summary dataframe
     :param samples: merged (dataframe) containing meta-data, cohort info and het_counts
     :param cohort_name: (String)
     :param output_path: (Path) for output visualizations .pdf
-    :return:
     """
 
     # plot layout

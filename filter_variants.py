@@ -12,8 +12,9 @@ def parse_arguments():
     """
     p = argparse.ArgumentParser()
     p.add_argument("--wd", type=Path, required=True,
-        help="Working directory containing cohort folders (e.g., ~/technical_test/)")
+                   help="Working directory containing cohort folders (e.g., ~/technical_test/)")
     return p.parse_args()
+
 
 def load_meta(meta_file):
     """
@@ -24,7 +25,6 @@ def load_meta(meta_file):
     samples = pd.read_csv(meta_file, sep="\t", dtype={"SampleID": "string", "Ancestry": "string"})
     # samples = samples.set_index("SampleID") # if row index is needed
     return samples
-
 
 
 def create_output_file(samples, het_counts, cohort_name, out_file):
@@ -47,6 +47,7 @@ def create_output_file(samples, het_counts, cohort_name, out_file):
     combined_df = pd.merge(samples, het_counts_df, on="SampleID")
     combined_df.to_parquet(out_file, index=False)
     return combined_df
+
 
 if __name__ == "__main__":
 

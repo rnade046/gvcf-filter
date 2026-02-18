@@ -7,6 +7,7 @@ def load_records(gvcf_file, sample_id):
     load variant records
     possible memory issue if datasets ++size
     :param gvcf_file: path
+    :param sample_id: string
     :return records: (data frame)
     """
     # find the line number where the column header starts (#CHROM)
@@ -52,13 +53,14 @@ def count_variants(records):
     :return count: int
     """
     # set filter for GT, DP, GQ columns
-    filter = (
+    # For scaling: consider using a config file
+    qc_filters = (
             records["GT"].isin(["0/1", "1/0", "0|1", "1|0"])  # heterogeneous phased or un-phased
             & (records["DP"] > 20)
             & (records["GQ"] >= 30)
     )
 
     # filter data frame
-    passing_records = records[filter]
+    passing_records = records[qc_filters]
     # #rows in filtered df corresponds to #variants
     return len(passing_records)
