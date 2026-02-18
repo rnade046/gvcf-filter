@@ -2,6 +2,7 @@ import pandas as pd
 from datetime import datetime
 from pathlib import Path
 import argparse
+import pyarrow
 
 import viz
 from gvcf_utils import load_records, count_variants
