@@ -27,12 +27,11 @@ def load_records(gvcf_file, sample_id):
         gvcf_file,
         sep="\t",
         compression="gzip",
-        skiprows=header_line_idx,  # skips all the '##' meta lines before #CHROM
+        skiprows=header_line_idx,  # skips all the '##' header lines before #CHROM
         header=0,
         skip_blank_lines=True,
     )
     print(f"loaded records: {records.shape}")
-    print(records.head())
 
     # parse FORMAT column assuming constant order [GT:AD:DP:GQ]
     # parts[0]=GT, parts[1]=AD, parts[2]=DP, parts[3]=GQ
@@ -41,8 +40,6 @@ def load_records(gvcf_file, sample_id):
     records["GT"] = parts[0]
     records["DP"] = parts[2].astype("int64")
     records["GQ"] = parts[3].astype("int64")
-    print(records.head())
-
     return records
 
 

@@ -1,6 +1,8 @@
 import pandas as pd
+from datetime import datetime
 from pathlib import Path
 import argparse
+
 import viz
 from gvcf_utils import load_records, count_variants
 
@@ -23,7 +25,6 @@ def load_meta(meta_file):
     :return: sample (data frame)
     """
     samples = pd.read_csv(meta_file, sep="\t", dtype={"SampleID": "string", "Ancestry": "string"})
-    # samples = samples.set_index("SampleID") # if row index is needed
     return samples
 
 
@@ -44,15 +45,17 @@ def create_output_file(samples, het_counts, cohort_name, out_file):
     samples["Cohort"] = cohort
 
     # combine and write dataframe
-    combined_df = pd.merge(samples, het_counts_df, on="SampleID")
+    combined_df = pd.merge(samples, het_counts_df, on="SampleID", how="left")
     combined_df.to_parquet(out_file, index=False)
     return combined_df
 
 
 if __name__ == "__main__":
+    start_time = datetime.now()
 
     # obtain working directory containing cohort directories as command line argument (--wd)
     wd = parse_arguments().wd
+
     # obtain list of cohorts (must be directory and begin with "Cohort_")
     cohort_dirs = sorted(p for p in wd.iterdir() if p.is_dir() and p.name.startswith("Cohort_"))
 
@@ -79,8 +82,13 @@ if __name__ == "__main__":
                 # filter records & count heterogeneous variants
                 het_counts[sample_id] = count_variants(records)
 
-                print(het_counts[sample_id])
+                print(f"Completed {sample_id}, total variants : {het_counts[sample_id]}")
 
         # generate outputs .parquet file & summary visualizations
         samples2 = create_output_file(samples, het_counts, cohort_name, output_path)
         viz.plot_het_count_age(samples2, cohort_name, viz_path)
+        print(f"Completed {cohort_name}")
+
+    end_time = datetime.now()
+    run_time = end_time - start_time
+    print(f"Pipeline execution complete, total runtime: {run_time}")
