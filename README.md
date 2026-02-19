@@ -8,9 +8,9 @@ Given a working directory containing one or more cohort folders, this pipeline p
 3. Extracting genotype and QC fields (`GT`, `DP`, `GQ`) from the sample field
 4. Filtering variant records using genotype and QC thresholds
 5. Counting the number of sites that pass filtering per sample
-5. Writing a cohort-level `.parquet` summary (metadata + per-sample counts) and generating summary boxplots (e.g., Age and Het_Count)
+6. Writing a cohort-level `.parquet` summary (metadata + per-sample counts) and generating summary boxplots (e.g., Age and Het_Count)
 
-**Het_Count** is the number of heterozygous variant sites (0/1, 1/0, 1|0, 0|1) per sample passing the thresholds (DP > 20 and GQ ≥ 30)
+**Het_Count** is the number of heterozygous variant sites (`0/1`, `1/0`, `1|0`, `0|1`) per sample passing the thresholds (`DP > 20` and `GQ ≥ 30`)
 
 ### Project structure
 Recommended: create a parent directory to store cloned repository and input data.
@@ -69,7 +69,10 @@ The script automatically:
 + Detects cohort directories under `--wd` (directories starting with `Cohort_`)
 + Generates a summary table (.parquet) and visualization (.pdf) under a new created `outputs/` directory for each cohort.
 
-### Outputs
+## Outputs
+Example outputs for Cohort_A and Cohort_B are provided under the `outputs/` directory.
+
+A typical output structure is shown below:
 ```
 Cohort_A/
 └─ outputs/
@@ -77,6 +80,9 @@ Cohort_A/
    └─ Cohort_A_boxplots.pdf     # boxplot visualization
 ```
 
+## Report
+The written response to the optimization, benchmarking and scaling question is available in the `report/` directory.
+
 ## Additional notes
 - Cross-platform paths are handled using `pathlib`
-- Total runtime is computed using `date_time`
+- Total runtime is computed using `datetime`
